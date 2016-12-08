@@ -1,7 +1,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import rw #Assumes rwmodule has been compiled with f2py to produce rw.so
+from rw import rwmodule as rw #Assumes rwmodule has been compiled with f2py to produce rw.so
 
 
 def analyze_rnet(Ntime,m,X0,N0,L,Nt,display):
@@ -11,8 +11,20 @@ def analyze_rnet(Ntime,m,X0,N0,L,Nt,display):
     	X0: initial node, (node with maximum degree if X0=0)
     	N0,L,Nt: recursive network parameters
     	"""
-
-
+    	isample = 1
+        X,Xm = rw.rwnet(Ntime,m,X0,N0,L,Nt,isample)
+        F = np.zeros([Ntime,N0+Nt])
+        for t in range(int(Ntime)):
+            bins = np.zeros(N0+Nt+1)
+            bins[:max(X[t+1,:])+1] = np.bincount(X[t+1,:])
+            F[t,:] = 1.0*bins[1:]/m
+        if (display==True):
+            maxloc = np.zeros(Ntime)
+            maxloc = F.argmax(axis=1)+1
+            plt.figure()
+            plt.plot(range(1,int(Ntime+1)),maxloc)
+            plt.show()
+        return F
 
 
 
@@ -23,9 +35,15 @@ def convergence_rnet(Ntime,m,X0,N0,L,Nt,display):
     	X0: initial node, (node with maximum degree if X0=0)
     	N0,L,Nt: recursive network parameters
     	"""
-    	
-    	
+    	isample = 1
+    	M = np.zeros(m)
+    	for mcount in range(1,m+1):
+    	   X,Xm = rw.rwnet(Ntime,m,X0,N0,L,Nt,isample)
+    	   M[mcount-1] = np.mean(Xm)
+    	plt.figure()
+    	plt.plot(range(1,m+1),M)
+    	plt.show()
     	
 if __name__== '__main__':
-#add code here to call functions and generate figures
-
+    #analyze_rnet(10,5,0,5,2,200,True)
+    convergence_rnet(100,1000,0,5,2,200,True)

@@ -77,7 +77,7 @@ subroutine adjacency_list(qnet,enet,alist1,alist2)
 	integer, dimension(size(qnet)+1), intent(out) :: alist2
 	integer :: i,j,n
         alist2(1) = 1
-        alist2(size(alist2)) = size(alist1)
+        alist2(size(alist2)) = size(alist1) +1
         do i=2,size(alist2)-1
             alist2(i) = alist2(i-1) + qnet(i-1)
         end do
