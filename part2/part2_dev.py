@@ -46,10 +46,9 @@ def solveFluNet(N0,L,Nt,T,Ntime,a,b0,b1,g,k,w):
         C = y[2*N:3*N]
         b = b0 + b1*(1+np.cos(2*np.pi*t))
         dy = np.zeros(3*N)
-        for i in range(N):
-            dy[i]= k*(1-S[i])-b*C[i]*S[i]+w*np.dot(P[i,:],S)-w*S[i]
-            dy[N+i]= b*C[i]*S[i]-(k+a)*E[i]+w*np.dot(P[i,:],E)-w*E[i]
-            dy[2*N+i]= a*E[i]-(g+k)*C[i]+w*np.dot(P[i,:],C)-w*C[i]
+        dy[:N]= k*(1-S)-b*C*S+w*np.dot(P,S)-w*S
+        dy[N:2*N]= b*C*S-(k+a)*E+w*np.dot(P,E)-w*E
+        dy[2*N:3*N]= a*E-(g+k)*C+w*np.dot(P,C)-w*C
         return dy
     
     def RHSnetF(y,t,a,b0,b1,g,k,w):
@@ -72,6 +71,12 @@ def solveFluNet(N0,L,Nt,T,Ntime,a,b0,b1,g,k,w):
     S = sol[:,:N]
     E = sol[:,N:2*N]
     C = sol[:,2*N:3*N]
+    #dy1 = RHSnet(init,1,a,b0,b1,g,k,w)
+    #dy2 = RHSnetF(init,1,a,b0,b1,g,k,w)
+    #print 'shapedy1', np.shape(dy1)
+    #print 'shapedy2', np.shape(dy2)
+    #print 'dy1', dy1
+    #print 'dy2', dy2
     return t,S,E,C
 
 
@@ -103,6 +108,23 @@ def analyze(N0,L,Nt,T,Ntime,a,b0,b1,g,k,threshold,warray,display=False):
                     count = count+1
             NC[i] = 1.0*count/N   
         Nmax[n] = max(NC)
+    if (display==True):
+        plt.figure()
+        plt.plot(warray,Cmax,label='Cmax')
+        plt.xlabel('w')
+        plt.legend(loc='best')
+        plt.title('analyze Mathilde Duverger')
+        plt.figure()
+        plt.plot(warray,Tmax,label='Tmax')
+        plt.xlabel('w')
+        plt.legend(loc='best')
+        plt.title('analyze Mathilde Duverger')
+        plt.figure()
+        plt.plot(warray,Nmax,label='Nmax')
+        plt.xlabel('w')
+        plt.legend(loc='best')
+        plt.title('analyze Mathilde Duverger')
+        plt.show()
     return Cmax,Tmax,Nmax
     
 
@@ -124,13 +146,15 @@ def performance():
 
 if __name__ == '__main__':            
    a,b0,b1,g,k,w = 45.6,750.0,0.5,73.0,1.0,0.1
-   #t,S,E,C = solveFluNet(5,2,2,5,10,a,b0,b1,g,k,w)
-   #print S
-   #warray = np.array([0,1e-2,1e-1,0.2,0.5,1.0])
-   warray = np.array([1])
-   Cmax,Tmax,Nmax = analyze(5,2,2,5,10,a,b0,b1,g,k,0.01,warray,display=False)
-   print 'Cmax=', Cmax
-   print 'Tmax=', Tmax
-   print 'Nmax=', Nmax
+   #t,S,E,C = solveFluNet(5,2,2,10,100,a,b0,b1,g,k,w)
+   #print 'S=',S
+   #print 'E=', E
+   #print 'C=', C
+   warray = np.array([0,1e-2,1e-1,0.2,0.5,1.0])
+   #warray = np.array([0.1])
+   Cmax,Tmax,Nmax = analyze(5,2,500,2,100,a,b0,b1,g,k,0.1,warray,True)
+   #print 'Cmax=', Cmax
+   #print 'Tmax=', Tmax
+   #print 'Nmax=', Nmax
 
 

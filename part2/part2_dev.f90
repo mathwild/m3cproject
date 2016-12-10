@@ -4,7 +4,7 @@ module flunet
         !add variables as needed
 	save
 	contains
-
+!f2py -c part2_dev.f90 --f90flags='-fopenmp' -lgomp -m p2 
 
 subroutine rhs(P,n,y,t,a,b0,b1,g,k,w,dy)
     implicit none
@@ -23,7 +23,7 @@ subroutine rhs(P,n,y,t,a,b0,b1,g,k,w,dy)
     real(kind=8), dimension(n) :: S,E,C,Prow
     real(kind=8) :: b,Pi
     integer :: i
-    Pi = 4*arctan(1)
+    Pi = 4*atan(1.0)
     S = y(1:n)
     E = y(n:2*n)
     C = y(2*n:3*n)
@@ -57,7 +57,7 @@ subroutine rhs_omp(P,n,y,t,a,b0,b1,g,k,w,numthreads,dy)
     real(kind=8), dimension(n) :: S,E,C
     real(kind=8) :: b,Pi 
     integer :: i
-    Pi = 4*arctan(1)
+    Pi = 4*atan(1.0)
     S = y(1:n)
     E = y(n:2*n)
     C = y(2*n:3*n)
