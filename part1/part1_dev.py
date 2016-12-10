@@ -12,7 +12,7 @@ def analyze_rnet(Ntime,m,X0,N0,L,Nt,display):
     	N0,L,Nt: recursive network parameters
     	"""
     	isample = 1
-        X,Xm = rw.rwnet(Ntime,m,X0,N0,L,Nt,isample)
+        X,Xm = rw.rwnet_omp(Ntime,m,X0,N0,L,Nt,isample,2)
         F = np.zeros([Ntime,N0+Nt])
         for t in range(int(Ntime)):
             bins = np.zeros(N0+Nt+1)
@@ -22,7 +22,7 @@ def analyze_rnet(Ntime,m,X0,N0,L,Nt,display):
             maxloc = np.zeros(Ntime)
             maxloc = F.argmax(axis=1)+1
             plt.figure()
-            plt.plot(range(1,int(Ntime+1)),maxloc)
+            plt.plot(range(1,int(Ntime+1)),maxloc,'p')
             plt.show()
         return F
 
@@ -37,13 +37,14 @@ def convergence_rnet(Ntime,m,X0,N0,L,Nt,display):
     	"""
     	isample = 1
     	M = np.zeros(m)
+    	#X,Xm = rw.rwnet(Ntime,m,X0,N0,L,Nt,isample)
     	for mcount in range(1,m+1):
-    	   X,Xm = rw.rwnet(Ntime,m,X0,N0,L,Nt,isample)
+    	   X,Xm = rw.rwnet(Ntime,mcount,X0,N0,L,Nt,isample)
     	   M[mcount-1] = np.mean(Xm)
     	plt.figure()
     	plt.plot(range(1,m+1),M)
     	plt.show()
     	
 if __name__== '__main__':
-    #analyze_rnet(10,5,0,5,2,200,True)
-    convergence_rnet(100,1000,0,5,2,200,True)
+    #analyze_rnet(1e5,1e3,0,5,2,200,True)
+    convergence_rnet(int(1e5),int(1e3),0,5,2,200,True)
