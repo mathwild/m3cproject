@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 from n1 import network as net
-#from p1 import flunet as fn
+from p2 import flunet as fn
 #from time import clock,time
 
 
@@ -37,7 +37,7 @@ def solveFluNet(N0,L,Nt,T,Ntime,a,b0,b1,g,k,w):
     used
     """
     init,infnode,P = initialize(N0,L,Nt,True)
-    N = (N0+Nt)
+    N = N0+Nt
     #add input variables to RHS functions if needed
     def RHSnet(y,t,a,b0,b1,g,k,w):
         """RHS used by odeint to solve Flu model"""
@@ -56,20 +56,19 @@ def solveFluNet(N0,L,Nt,T,Ntime,a,b0,b1,g,k,w):
         """RHS used by odeint to solve Flu model"
         Calculations carried out by fn.rhs
         """
-        
+        dy = fn.rhs(P,y,t,a,b0,b1,g,k,w)
         return dy
         
     def RHSnetFomp(y,t,a,b0,b1,g,k,w):
         """RHS used by odeint to solve Flu model
         Calculations carried out by fn.rhs_omp
         """
-
+        dy = fn.rhs_omp(P,y,t,a,b0,b1,g,k,w,2)
         return dy
 
     #Add code here and to RHS functions above to simulate network flu model
     t = np.linspace(0,T,Ntime)
     sol = odeint(RHSnet,init,t,args=(a,b0,b1,g,k,w))
-    print np.shape(sol)
     S = sol[:,:N]
     E = sol[:,N:2*N]
     C = sol[:,2*N:3*N]
@@ -86,7 +85,24 @@ def analyze(N0,L,Nt,T,Ntime,a,b0,b1,g,k,threshold,warray,display=False):
            threshold: use to compute  Nmax
            warray: contains values of omega
     """
-
+    Cmax = np.zeros((np.shape(warray))[0])
+    Tmax = np.zeros((np.shape(warray))[0])
+    Nmax = np.zeros((np.shape(warray))[0])
+    N = (N0+Nt)
+    for n in range((np.shape(warray))[0]):
+        w = warray[n]
+        t,S,E,C = solveFluNet(N0,L,Nt,T,Ntime,a,b0,b1,g,k,w)
+        Cmax[n] = np.amax(C)
+        u = [(index) for index,row in enumerate(C) if np.amax(C) in row]
+        Tmax[n] = u[0] + 1
+        NC = np.zeros(Ntime)
+        for i in range(Ntime):
+            count = 0
+            for j in range(N):
+                if (C[i,j]>threshold):
+                    count = count+1
+            NC[i] = 1.0*count/N   
+        Nmax[n] = max(NC)
     return Cmax,Tmax,Nmax
     
 
@@ -108,5 +124,13 @@ def performance():
 
 if __name__ == '__main__':            
    a,b0,b1,g,k,w = 45.6,750.0,0.5,73.0,1.0,0.1
-   t,S,E,C = solveFluNet(5,2,2,5,10,a,b0,b1,g,k,w)
-   print S
+   #t,S,E,C = solveFluNet(5,2,2,5,10,a,b0,b1,g,k,w)
+   #print S
+   #warray = np.array([0,1e-2,1e-1,0.2,0.5,1.0])
+   warray = np.array([1])
+   Cmax,Tmax,Nmax = analyze(5,2,2,5,10,a,b0,b1,g,k,0.01,warray,display=False)
+   print 'Cmax=', Cmax
+   print 'Tmax=', Tmax
+   print 'Nmax=', Nmax
+
+
