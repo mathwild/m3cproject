@@ -146,15 +146,15 @@ def performance():
 
 if __name__ == '__main__':            
    a,b0,b1,g,k,w = 45.6,750.0,0.5,73.0,1.0,0.1
-   #t,S,E,C = solveFluNet(5,2,2,10,100,a,b0,b1,g,k,w)
+   #t,S,E,C = solveFluNet(5,2,500,10,100,a,b0,b1,g,k,w)
    #print 'S=',S
    #print 'E=', E
    #print 'C=', C
    warray = np.array([0,1e-2,1e-1,0.2,0.5,1.0])
    #warray = np.array([0.1])
    Cmax,Tmax,Nmax = analyze(5,2,500,2,100,a,b0,b1,g,k,0.1,warray,True)
-   #print 'Cmax=', Cmax
-   #print 'Tmax=', Tmax
-   #print 'Nmax=', Nmax
+   print 'Cmax=', Cmax
+   print 'Tmax=', Tmax
+   print 'Nmax=', Nmax
 
 
