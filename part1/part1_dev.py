@@ -28,7 +28,7 @@ def analyze_rnet(Ntime,m,X0,N0,L,Nt,display):
 
 
 
-def convergence_rnet(Ntime,m,X0,N0,L,Nt,display):
+def convergence_rnet(Ntime,m,X0,N0,L,Nt):
     	"""Input variables:
 	Ntime: number of time steps
     	m: number of walks
@@ -36,15 +36,20 @@ def convergence_rnet(Ntime,m,X0,N0,L,Nt,display):
     	N0,L,Nt: recursive network parameters
     	"""
     	isample = 1
-    	M = np.zeros(m)
-    	#X,Xm = rw.rwnet(Ntime,m,X0,N0,L,Nt,isample)
-    	for mcount in range(1,m+1):
-    	   X,Xm = rw.rwnet(Ntime,mcount,X0,N0,L,Nt,isample)
-    	   M[mcount-1] = np.mean(Xm)
+    	X,Xm = rw.rwnet(Ntime,m,X0,N0,L,Nt,isample)
+    	Xmcount = np.zeros(m)
+    	Xmcount[m-1] = Xm[Ntime-1]
+    	marray= np.zeros(m)
+    	marray[m-1] = m
+    	for mcount in range(1,m):
+    	   Xt = X[:,:mcount]
+    	   bins = np.count_nonzero(Xt[Ntime,:]==Xt[0,0])
+    	   Xmcount[mcount-1] = 1.0*bins/mcount
+    	   marray[mcount-1] = mcount
     	plt.figure()
-    	plt.plot(range(1,m+1),M)
+    	plt.plot(marray,Xmcount)
     	plt.show()
     	
 if __name__== '__main__':
     #analyze_rnet(1e5,1e3,0,5,2,200,True)
-    convergence_rnet(int(1e5),int(1e3),0,5,2,200,True)
+    convergence_rnet(1e5,1000,0,5,2,200)
