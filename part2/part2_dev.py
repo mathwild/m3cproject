@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 from n1 import network as net
 from p2 import flunet as fn
-#from time import clock,time
+from time import clock,time
 
 
 def initialize(N0,L,Nt,pflag):
@@ -30,7 +30,7 @@ def initialize(N0,L,Nt,pflag):
         return init,infnode,P
     return init,infnode
     
-def solveFluNet(N0,L,Nt,T,Ntime,a,b0,b1,g,k,w):
+def solveFluNet(N0,L,Nt,T,Ntime,a,b0,b1,g,k,w,RHS=3,speedtest=False):
     """Simulate network flu model at Ntime equispaced times
     between 0 and T (inclusive). Add additional input variables
     as needed clearly commenting what they are and how they are  
@@ -67,17 +67,24 @@ def solveFluNet(N0,L,Nt,T,Ntime,a,b0,b1,g,k,w):
 
     #Add code here and to RHS functions above to simulate network flu model
     t = np.linspace(0,T,Ntime)
-    sol = odeint(RHSnet,init,t,args=(a,b0,b1,g,k,w))
-    S = sol[:,:N]
-    E = sol[:,N:2*N]
-    C = sol[:,2*N:3*N]
-    #dy1 = RHSnet(init,1,a,b0,b1,g,k,w)
-    #dy2 = RHSnetF(init,1,a,b0,b1,g,k,w)
-    #print 'shapedy1', np.shape(dy1)
-    #print 'shapedy2', np.shape(dy2)
-    #print 'dy1', dy1
-    #print 'dy2', dy2
-    return t,S,E,C
+    if (speedtest==True):
+        if (RHS==1):
+            RHSnet(init,1,a,b0,b1,g,k,w)
+        if (RHS==2):
+            RHSnetF(init,1,a,b0,b1,g,k,w)
+        if (RHS==3):
+            RHSnetFomp(init,1,a,b0,b1,g,k,w)
+    else:
+        if (RHS==1):
+            sol = odeint(RHSnet,init,t,args=(a,b0,b1,g,k,w))
+        if (RHS==2):
+            sol = odeint(RHSnetF,init,t,args=(a,b0,b1,g,k,w))
+        if (RHS==3):
+            sol = odeint(RHSnetFomp,init,t,args=(a,b0,b1,g,k,w))
+        S = sol[:,:N]
+        E = sol[:,N:2*N]
+        C = sol[:,2*N:3*N]
+        return t,S,E,C
 
 
 def analyze(N0,L,Nt,T,Ntime,a,b0,b1,g,k,threshold,warray,display=False):
@@ -136,25 +143,56 @@ def visualize(enet,C,threshold):
     return None
 
 
-def performance():
+def performance(N0,L,Ntmax,T,Ntime,a,b0,b1,g,k,w):
     """function to analyze performance of python, fortran, and fortran+omp approaches
         Add input variables as needed, add comment clearly describing the functionality
         of this function including figures that are generated and trends shown in figures
         that you have submitted
     """
+    Nt = Ntmax/10
+    dt = Ntmax/10
+    Ntu = np.zeros(10)
+    tpy = np.zeros(10)
+    tf90 = np.zeros(10)
+    tf90OMP = np.zeros(10)
+    for i in range(10):
+        t0 = clock()
+        solveFluNet(N0,L,Nt,T,Ntime,a,b0,b1,g,k,w,1,True)
+        t1 = clock()
+        tpy[i] = t1-t0
+        t0 = clock()
+        solveFluNet(N0,L,Nt,T,Ntime,a,b0,b1,g,k,w,2,True)
+        t1 = clock()
+        tf90[i] = t1-t0
+        t0 = clock()
+        solveFluNet(N0,L,Nt,T,Ntime,a,b0,b1,g,k,w,3,True)
+        t1 = clock()
+        tf90OMP[i] = t1-t0
+        Ntu[i] = Nt
+        Nt = Nt+dt
+    plt.figure()
+    plt.plot(Ntu,tpy,label='Speed with Python RHS')
+    plt.plot(Ntu,tf90,label='Speed with Fortran RHS')
+    plt.plot(Ntu,tf90OMP,label='Speed with Fortran OMP RHS')
+    plt.legend(loc='best')
+    plt.show()
+    return tpy,tf90,tf90OMP
 
 
 if __name__ == '__main__':            
    a,b0,b1,g,k,w = 45.6,750.0,0.5,73.0,1.0,0.1
-   #t,S,E,C = solveFluNet(5,2,500,10,100,a,b0,b1,g,k,w)
+   #t,S,E,C = solveFluNet(5,2,2,10,100,a,b0,b1,g,k,w)
    #print 'S=',S
    #print 'E=', E
    #print 'C=', C
-   warray = np.array([0,1e-2,1e-1,0.2,0.5,1.0])
+   #warray = np.array([0,1e-2,1e-1,0.2,0.5,1.0])
    #warray = np.array([0.1])
-   Cmax,Tmax,Nmax = analyze(5,2,500,2,100,a,b0,b1,g,k,0.1,warray,True)
-   print 'Cmax=', Cmax
-   print 'Tmax=', Tmax
-   print 'Nmax=', Nmax
-
+   #Cmax,Tmax,Nmax = analyze(5,2,500,2,100,a,b0,b1,g,k,0.1,warray,True)
+   #print 'Cmax=', Cmax
+   #print 'Tmax=', Tmax
+   #print 'Nmax=', Nmax
+   tpy,tf90,tf90OMP = performance(5,2,1000,2,100,a,b0,b1,g,k,w)
+   print tpy
+   print tf90
+   print tf90OMP
 

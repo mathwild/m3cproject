@@ -23,10 +23,10 @@ subroutine rhs(P,n,y,t,a,b0,b1,g,k,w,dy)
     real(kind=8), dimension(n) :: S,E,C,Prow
     real(kind=8) :: b,Pi
     integer :: i
-    Pi = 4*atan(1.0)
+    Pi = acos(-1.d0)
     S = y(1:n)
-    E = y(n:2*n)
-    C = y(2*n:3*n)
+    E = y(n+1:2*n)
+    C = y(2*n+1:3*n)
     b = b0 + b1*(1+cos(2*Pi*t))
     do i=1,n
         Prow = P(i,:)
@@ -57,10 +57,10 @@ subroutine rhs_omp(P,n,y,t,a,b0,b1,g,k,w,numthreads,dy)
     real(kind=8), dimension(n) :: S,E,C
     real(kind=8) :: b,Pi 
     integer :: i
-    Pi = 4*atan(1.0)
+    Pi = acos(-1.d0)
     S = y(1:n)
-    E = y(n:2*n)
-    C = y(2*n:3*n)
+    E = y(n+1:2*n)
+    C = y(2*n+1:3*n)
     b = b0 + b1*(1+cos(2*Pi*t))
     !$call omp_set_num_threads(numthreads)
     !$OMP parallel do
