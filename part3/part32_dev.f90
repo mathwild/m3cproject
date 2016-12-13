@@ -1,9 +1,14 @@
+!Compile
+!mpif90 -o p32.exe part32_dev.f90
+!Run
+!mpiexec -n 2 p32.exe
+
 !-------------------------------
 module syncmodule
-	implicit none
-	complex(kind=16), parameter :: ii=cmplx(0.0,1.0) !ii = sqrt(-1)
+    implicit none
+    complex(kind=16), parameter :: ii=cmplx(0.0,1.0) !ii = sqrt(-1)
     integer :: ntotal, a !total number of oscillators, 
-	real(kind=8) :: c,mu,sigma !coupling coefficient, mean, std
+    real(kind=8) :: c,mu,sigma !coupling coefficient, mean, std
 	save
 end module syncmodule
 !-------------------------------
@@ -65,14 +70,12 @@ program sync_mpi
 	    write(12,*) order(i1)
 	end do
 	close(12)
-    end if
+        end if
     !can be loaded in python with: f=np.loadtxt('theta.dat')
    
     call MPI_FINALIZE(ierr)
 end program sync_mpi
 
-
-subroutine output
 
 
 
@@ -92,15 +95,20 @@ subroutine euler_mpi(comm,numprocs,n,t0,y0,w,dt,nt,y,order)
     use mpi
     use syncmodule
     implicit none
-    integer, intent (in) :: n,nt
+    integer, intent (in) :: comm,numprocs,n,nt
     real(kind=8), dimension(n), intent(in) :: y0,w
-    real(kind=8), intent(in) :: t0,dt,order(nt)
+    real(kind=8), intent(in) :: t0,dt
     real(kind=8), dimension(n), intent(out) :: y
+    real(kind=8), dimension(nt), intent(out) :: order
+    real(kind=8), allocatable, dimension(:) :: ylocal
+    real(kind=8), allocatable, dimension(:) :: f
+    real(kind=8), allocatable, dimension(:) :: Rpart
+    integer, dimension(MPI_STATUS_SIZE) :: status
+    integer, allocatable, dimension(:) :: Nper_proc, disps
     real(kind=8) :: t
-    integer :: i1,k,istart,iend
-    integer :: comm,myid,ierr,numprocs
+    integer :: i1,k,istart,iend,nn,sender
+    integer :: myid,ierr
   
-
     call MPI_COMM_RANK(comm, myid, ierr)
     print *, 'start euler_mpi, myid=',myid
 
@@ -111,38 +119,63 @@ subroutine euler_mpi(comm,numprocs,n,t0,y0,w,dt,nt,y,order)
     !generate decomposition and allocate sub-domain variables
     call mpe_decomp1d(size(y),numprocs,myid,istart,iend)
     print *, 'istart,iend,threadID=',istart,iend,myid
-
     
- 
- 
+    !allocate and define variables
+    allocate(ylocal(iend-istart+1))
+    ylocal = y0(istart:iend)
+    nn = iend-istart+2*a+1
+    allocate(f(nn))
+    allocate(RPart(nn-2*a))
+    
     !time marching
     do k = 1,nt
-       
-
-        call RHS_mpi(!add code here)
+        if (myid>0) then
+            sender = myid-1
+        else 
+            sender = numprocs-1
+        end if
+        
+        call MPI_SEND(ylocal(iend-a+1:iend),a,MPI_DOUBLE_PRECISION,myid,0,comm,ierr)
+        call MPI_RECV(f(1:a),a,MPI_DOUBLE_PRECISION,sender,MPI_ANY_TAG,comm,status,ierr)
+        
+        if (myid<numprocs-1) then
+            sender = myid+1
+        else
+            sender=0
+        end if
+        
+        call MPI_SEND(ylocal(istart:istart+a-1),a,MPI_DOUBLE_PRECISION,myid,0,comm,ierr)
+        call MPI_RECV(f(nn-a+1:nn),a,MPI_DOUBLE_PRECISION,sender,MPI_ANY_TAG,comm,status,ierr)
+      
+        f(a+1:nn-a)= ylocal  
+            
+        call RHS_mpi(nn,t,w(istart:iend),f,Rpart)
 
         ylocal= ylocal + dt*Rpart !ylocal must be declared and defined, Rpart must be declared, and 
                                   !should be returned by RHS_mpi
 
-
+        t = t+dt
 	!compute order, and store on myid==0
     
     end do
  
- 
     print *, 'before collection',myid, maxval(abs(ylocal))
-  
-
-    call MPI_GATHER(!add code here &
-								,MPI_INT,0,comm,ierr)
+    
+    allocate(Nper_proc(numprocs),disps(numprocs))
+    
+    call MPI_GATHER(iend-istart+1,1,MPI_INT,Nper_proc,1,MPI_INT,0,comm,ierr)
       !collect ylocal from each processor onto myid=0
 
     if (myid==0) then
         !compute disps
+        disps(1)=0
+        do i1=2,numprocs
+            disps(i1)=disps(i1-1) + Nper_proc(i1-1)
+        end do
     end if
 
     !collect ylocal from each processor onto myid=0
-	call MPI_GATHERV(ylocal,!add code here &
+    call MPI_GATHERV(ylocal,iend-istart+1,MPI_DOUBLE_PRECISION,y,Nper_proc, &
                 disps,MPI_DOUBLE_PRECISION,0,comm,ierr)
 
     if (myid==0) print *, 'finished',maxval(abs(y))
@@ -157,14 +190,17 @@ subroutine RHS_mpi(nn,t,w,f,rhs)
     implicit none
     integer, intent(in) :: nn
     real(kind=8), intent(in) :: t
-!dimensions of variables below must be added    
-    real(kind=8), dimension( ), intent(in) :: w 
-    real(kind=8), dimension( ), intent(in) :: f
-    real(kind=8), dimension( ), intent(out) :: rhs
-
-
-!Add code to compute rhs
-
+    !dimensions of variables below must be added    
+    real(kind=8), dimension(nn-2*a), intent(in) :: w 
+    real(kind=8), dimension(nn), intent(in) :: f
+    real(kind=8), dimension(nn-2*a), intent(out) :: rhs
+    real(kind=8) :: sumsin
+    integer :: i,j
+    
+    !Add code to compute rhs
+    do i=1,nn-2*a
+        rhs(i) = w(i) - c*sum(sin(f(i+a)-f))/dble(ntotal)
+    end do
 
 end subroutine RHS_mpi
 
