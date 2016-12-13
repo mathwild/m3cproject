@@ -12,17 +12,23 @@ def oscillator(Nt,T,N,c,mu,s):
            c: coupling coefficient
            mu,sigma: distribution parameters for omega_i
     """
-    omega = np.random.normal(mu,s,N)
+    sync.ntotal = N
+    sync.c = c
+    sync.w = np.random.normal(mu,s,N)
     theta0  = np.random.uniform(0,2*np.pi,N)
-    dt = T/Nt
+    dt = T/float(Nt)
     theta,order = sync.rk4(0,theta0,dt,Nt)
-    t = np.linspace(0,T,Nt)
-    return t,omega,theta0,theta,order
+    return theta,order
     
     
 
 if __name__ == '__main__':
     n,c,m,s = 101,10.0,1.0,0.1
     Nt,T = 500,100
-    t,omega,theta0,theta,order = oscillator(Nt,T,n,c,m,s)
-    print order[0]
+    c = 1
+    theta,order = oscillator(Nt,T,n,c,m,s)
+    plt.figure()
+    plt.plot(order)
+    plt.figure()
+    plt.plot(np.mod(np.transpose(theta),2*np.pi))
+    plt.show()
