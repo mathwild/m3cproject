@@ -25,9 +25,14 @@ def oscillator(Nt,T,N,c,mu,s):
 if __name__ == '__main__':
     n,c,m,s = 101,10.0,1.0,0.1
     Nt,T = 500,100
-    theta,order = oscillator(Nt,T,n,c,m,s)
+    #theta,order = oscillator(Nt,T,n,c,m,s)
+    #plt.figure()
+    #plt.plot(order)
+    #plt.figure()
+    #plt.plot(np.mod(np.transpose(theta),2*np.pi))
+    #plt.show()
     plt.figure()
-    plt.plot(order)
+    plt.scatter(range(101),np.mod(np.loadtxt('theta.dat'),2*np.pi))
     plt.figure()
-    plt.plot(np.mod(np.transpose(theta),2*np.pi))
+    plt.plot(range(500),np.loadtxt('order.dat'))
     plt.show()

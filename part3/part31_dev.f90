@@ -1,6 +1,6 @@
 module sync
 	implicit none
-	complex(kind=16), parameter :: ii=cmplx(0.0,1.0) !ii = sqrt(-1)
+	complex(kind=8), parameter :: ii=cmplx(0.0,1.0) !ii = sqrt(-1)
 	integer :: ntotal !total number of nodes
 	real(kind=8) :: c !coupling coefficient
         real(kind=8), dimension(:) :: w !array of frequencies
