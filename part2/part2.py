@@ -1,4 +1,4 @@
-"""Project, part 2"""
+"""Project, part 2 by Mathilde Duverger CID:00978498"""
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint

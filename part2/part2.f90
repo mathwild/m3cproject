@@ -1,10 +1,11 @@
+!Part 2 by Mathilde Duverger CID: 00978498
+
 module flunet
         use omp_lib
 	implicit none
         !add variables as needed
 	save
 	contains
-!f2py -c part2_dev.f90 --f90flags='-fopenmp' -lgomp -m p2 
 
 subroutine rhs(P,n,y,t,a,b0,b1,g,k,w,dy)
     implicit none
