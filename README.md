@@ -15,3 +15,19 @@ part3_template.py, part3_dev.py and part3.py are the code for the project part 3
 part31_template.f90, part31_dev.f90 and part31.f90 are the code for the project part 3
 part32_template.f90, part32_dev.f90 and part32.f90 are the code for the project part 3
 
+The files for assessment are:
+- network.f90
+- part1.py
+- part1.f90
+- p11.png
+- p12.png
+- part2.py
+- part2.f90
+- p21.png
+- p22.png
+- p23.png
+- p24.png
+- p25.png
+- part3.py
+- part31.f90
+- part32.f90
