@@ -18,7 +18,6 @@ def oscillator(Nt,T,N,c,mu,s):
     theta0  = np.random.uniform(0,2*np.pi,N)
     dt = T/float(Nt)
     theta,order = sync.rk4(0,theta0,dt,Nt)
-    return theta,order
     
     
 

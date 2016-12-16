@@ -107,7 +107,7 @@ subroutine euler_mpi(comm,numprocs,n,t0,y0,w,dt,nt,y,order)
     integer, allocatable, dimension(:) :: Nper_proc, disps
     real(kind=8) :: t
     complex(kind=8), dimension(nt) :: R
-    complex(kind=8), dimension(nt,numprocs) :: Rtot
+    complex(kind=8), dimension(nt) :: Rtot
     integer :: i1,k,istart,iend,nn,receiver,sender
     integer :: myid,ierr
   
@@ -143,7 +143,7 @@ subroutine euler_mpi(comm,numprocs,n,t0,y0,w,dt,nt,y,order)
             sender = numprocs-1
         end if
         
-        call MPI_SEND(ylocal(iend-a+1:iend),a,MPI_DOUBLE_PRECISION,receiver,0,comm,ierr)
+        call MPI_SEND(ylocal(size(ylocal)-a+1:size(ylocal)),a,MPI_DOUBLE_PRECISION,receiver,0,comm,ierr)
         call MPI_RECV(f(1:a),a,MPI_DOUBLE_PRECISION,sender,MPI_ANY_TAG,comm,status,ierr)
         
         if (myid>0) then
@@ -158,7 +158,7 @@ subroutine euler_mpi(comm,numprocs,n,t0,y0,w,dt,nt,y,order)
             sender=0
         end if
         
-        call MPI_SEND(ylocal(istart:istart+a-1),a,MPI_DOUBLE_PRECISION,receiver,0,comm,ierr)
+        call MPI_SEND(ylocal(1:a),a,MPI_DOUBLE_PRECISION,receiver,0,comm,ierr)
         call MPI_RECV(f(nn-a+1:nn),a,MPI_DOUBLE_PRECISION,sender,MPI_ANY_TAG,comm,status,ierr)
       
         f(a+1:nn-a)= ylocal  
@@ -172,6 +172,12 @@ subroutine euler_mpi(comm,numprocs,n,t0,y0,w,dt,nt,y,order)
         
 	!compute order, and store on myid==0
         R(k) = sum(exp(ii*ylocal))
+        
+        !collect R from each processor onto myid=0
+        call MPI_REDUCE(R(k),Rtot(k),1,MPI_DOUBLE_COMPLEX,MPI_SUM,0,comm,ierr)
+        if (myid==0) then 
+            order = abs(Rtot)/dble(n)
+        end if
         
     end do
  
@@ -194,24 +200,6 @@ subroutine euler_mpi(comm,numprocs,n,t0,y0,w,dt,nt,y,order)
     call MPI_GATHERV(ylocal,iend-istart+1,MPI_DOUBLE_PRECISION,y,Nper_proc, &
                 disps,MPI_DOUBLE_PRECISION,0,comm,ierr)
     
-    Nper_proc(1) = 500
-    Nper_proc(2) = 500
-    
-    if (myid==0) then
-        !compute disps
-        disps(1)=0
-        do i1=2,numprocs
-            disps(i1)=disps(i1-1) + Nper_proc(i1-1)
-        end do
-    end if
-     
-    !collect R from each processor onto myid=0
-    !call MPI_REDUCE(R,)
-    call MPI_GATHERV(R,nt,MPI_DOUBLE_COMPLEX,Rtot,Nper_proc, &
-                disps,MPI_DOUBLE_COMPLEX,0,comm,ierr)
-    
-    order = abs(sum(Rtot,2))/dble(n)
-
     if (myid==0) print *, 'finished',maxval(abs(y))
 
 end subroutine euler_mpi
@@ -232,7 +220,7 @@ subroutine RHS_mpi(nn,t,w,f,rhs)
     
     !Add code to compute rhs
     do i=1,nn-2*a
-        rhs(i) = w(i) - c*sum(sin(f(i+a)-f))/dble(ntotal)
+        rhs(i) = w(i) - c*sum(sin(f(i+a)-f(i:i+2*a)))/dble(ntotal)
     end do
 
 end subroutine RHS_mpi
