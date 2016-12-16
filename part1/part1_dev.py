@@ -29,7 +29,7 @@ def analyze_rnet(Ntime,m,X0,N0,L,Nt,display=False):
             plt.plot(range(1,int(Ntime+1)),maxloc,'p')
             plt.title('analyze_rnet Mathilde Duverger')
             plt.xlabel('Step')
-            plt.ylabel('Node with greatest walkers')
+            plt.ylabel('Node with greatest number of walkers')
             plt.show()
         return F
 
@@ -39,7 +39,8 @@ def convergence_rnet(Ntime,m,X0,N0,L,Nt,display=False):
         """This code computes the fraction of walkers at the initial
         node in the final timestep for different number of walkers, m.
         From the plot, we notice that the fraction of walkers firstly increases
-        converges to a value between 0.04 and 0.05. """
+        and then converges to a value between 0.04 and 0.05. We can say that
+        approximately 4 percent of walkers end up in the node they started in"""
     	"""Input variables:
 	Ntime: number of time steps
     	m: number of walks
