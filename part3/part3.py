@@ -1,3 +1,6 @@
+"""Project part 3 by Mathilde Duverger CID: 00978498
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint

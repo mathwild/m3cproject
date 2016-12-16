@@ -1,7 +1,4 @@
-!Compile
-!mpif90 -o p32.exe part32_dev.f90
-!Run
-!mpiexec -n 2 p32.exe
+!Project part 3 by Mathilde Duverger CID: 00978498
 
 !-------------------------------
 module syncmodule
