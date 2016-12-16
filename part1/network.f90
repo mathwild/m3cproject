@@ -1,4 +1,4 @@
-!Recursive network model
+!Recursive network model by Mathilde Duverger CID: 00978498
 module network
 
 	contains

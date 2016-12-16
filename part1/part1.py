@@ -1,4 +1,5 @@
-
+"""Part 1 by Mathilde Duverger CID: 00978498
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 from rw import rwmodule as rw #Assumes rwmodule has been compiled with f2py to produce rw.so

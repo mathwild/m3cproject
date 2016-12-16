@@ -1,4 +1,4 @@
-!Project part 1
+!Project part 1 by Mathilde Duverger CID: 00978498
 module rwmodule
     use network
 contains
